@@ -26,12 +26,12 @@ UCBUSY, bit 0 indicates transmitting or receiving
 - Whether a framing, parity, or overrun error has occurred
 UCFE is bit 6 for framing, UCPE is bit 4 for parity, and UCOE is bit 5 for overrun
 - Whether the RX buffer contains unread data
-UCRXIFG is bit 0 and it is set when received data is ready to be read.
+UCRXIFG is bit 0 of the UCAxIFG register, and it is set when data is ready to be read.
 
 
 ## 3. (5 pts)
 
-Assume that the eUSCI_A3 module is using SMCLK as its clock source, which has a frequency of 12 MHz. Calculate the value that is needed to be written to the UCAxBRW register to configure the eUSCI_A3 module for 115200 baud.
+Assume that the eUSCI_A3 module is using SMCLK as its clock source, which has a frequency of 12 MHz. Calculate the value that is needed to be written to the UCAxBRW register to configure the eUSCI_A3 module for 115200 baud. This calculation assumes 16x oversampling is enabled.
 
 12,000,000 / 115,200 = 104.1667
 104.1667 / 16 = 6.5104 = 6
@@ -54,7 +54,7 @@ void UART2_Init(void)
     // Hold eUSCI_A2 in software reset.
     EUSCI_A2->CTLW0 |= 0x0001;
     P3->SEL0 |= 0x0C;
-    P3->SEL1 &= ~(0x0C0);
+    P3->SEL1 &= ~(0x0C);
     // SMCLK, MSB first, 8-bit data, no parity,
     // one stop bit, UART mode, reset held.
     EUSCI_A2->CTLW0 = 0x2081;
@@ -74,6 +74,8 @@ Suppose that you have a main program that is transmitting data using the eUSCI_A
 ## 5. (5 pts)
 
 What is the function of the eUSCI_B module? How does SPI communication differ from UART communication in terms of:
+
+The function of eUSCI_B module is a communication peripheral on the MSP432 that supports SPI and I2C communication.
 
 - Synchronization
 SPI shares a clock and UART agrees on a baud rate.
@@ -106,19 +108,23 @@ It can give corrupted data due to bus contention.
 
 Briefly describe the function of the UCBxCTLW0 (Control Word 0) register from the eUSCI_B module.
 
-UCBxCTLW0 configures the eUSCI_B module's communication settings, including SPI clock polarity and phase, bit order, data length, clock source, and softwarer reset.
+UCBxCTLW0 configures the eUSCI_B module's communication settings, including SPI clock polarity and phase, bit order, data length, clock source, and software reset.
 
 ### (b) (5 pts)
 
 Which bits need to be cleared or set in the UCBxCTLW0 register to configure the SPI mode used by the eUSCI_B module? Provide a description of each bit.
 
-USYNC is bit 8 (0x0100) and is used to enable synchronous communication 
+UCSYNC is bit 8 (0x0100) and must be set to enable synchronous communication for SPI.
 
 UCMODE, bits 9-10 (0x0600) clears both for 3 wire SPI. 01 selects 4 wire SPI with active high STE, and 10 selects 4 wire SPI with active low STE.
 
 UCCKPL is bit 14 (0x4000) clears for a clock that idles low; set for a clock that idles high.
 
-UCCKPH is bit 15 (0x8000) sets capture data on teh first clock edge; clear to capture on second edge.
+UCCKPH is bit 15 (0x8000) sets capture data on the first clock edge; clear to capture on second edge.
+
+UCMSB is bit 13 that when set is for MSB transmission and clear for LSB first.
+
+UC7BIT is bit 12, clear for 8 bit data and set for 7 bit data.
 
 UCMST is bit 11 (0x0800) sets for master operation; clear for slave operation.
 
@@ -126,7 +132,7 @@ UCMST is bit 11 (0x0800) sets for master operation; clear for slave operation.
 
 Which field in the UCBxCTLW0 register selects the clock source used by the eUSCI_B module? Provide the values used and the corresponding clock sources.
 
-Bit 7 and 6 need to be cleared in UCBxCTW0, selects the clock source for SPI.
+The UCSSEL field for bits 7-6 in UCBxCTLW0 selects the SPI clock source. For SMCLK, bit 7 is set and bit 6 is cleared.
 
 00 0x0000 Reserved clock source
 01 0x0040 ACLK clock source
